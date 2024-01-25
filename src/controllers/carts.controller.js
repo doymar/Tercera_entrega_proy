@@ -1,72 +1,129 @@
-import { createOne, addProduct, findById, deleteProduct, updateArray, updateQuantity, deleteAll } from '../services/carts.service.js'
+import CustomError from '../errors/error.generator.js';
+import { ErrorsMessages, ErrorsNames } from '../errors/errors.enum.js';
+import { cartsService } from '../services/carts.service.js'
+import mongoose from 'mongoose';
 
 export const createCart = async (req, res) => {
     try {
-        const cart = await createOne();
+        const cart = await cartsService.createOne();
         res.status(200).json({message: "Cart", cart });
     } catch (err) {
         res.status(500).json({error: err.message});
     }
 }
 
-export const findCartById = async (req, res) => {
-    const { idCart } = req.params;
+export const findCartById = async (req, res, next) => {
     try {
-        const cart = await findById(idCart);
+        const { idCart } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(idCart)) {
+          return CustomError.generateError(ErrorsMessages.OID_INVALID,404,ErrorsNames.OID_INVALID);
+        }
+        const cart = await cartsService.findById(idCart);
+        if (!cart) {
+          return CustomError.generateError(ErrorsMessages.CART_NOT_FOUND,404,ErrorsNames.CART_NOT_FOUND);
+        }
         res.status(200).json({message: "Cart", cart });
     } catch (error) {
-        res.status(500).json({error: err.message});
+        next(error);
     }
 }
 
-export const addProductToCart = async (req, res) => {
-    const { idCart, idProduct } = req.params;
+export const addProductToCart = async (req, res, next) => {
     try {
-        const cart = await addProduct(idCart, idProduct);
-        res.status(200).json({message: "Cart", cart });
+      const { idCart, idProduct } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(idCart) || !mongoose.Types.ObjectId.isValid(idProduct) ) {
+        return CustomError.generateError(ErrorsMessages.OID_INVALID,404, ErrorsNames.OID_INVALID);
+      }
+      const cart = await cartsService.addProduct(idCart, idProduct);
+      if (!cart) {
+        return CustomError.generateError(ErrorsMessages.CART_OR_PRODUCT_NOT_FOUND,404,ErrorsNames.CART_OR_PRODUCT_NOT_FOUND);
+      }
+      res.status(200).json({message: "Cart", cart });
     } catch (error) {
-        res.status(500).json({error: err.message});
+      next(error);
     }
 }
 
-export const deleteProductToCart = async (req,res) => {
-    const { cid, pid } = req.params;
+export const deleteProductToCart = async (req,res, next) => {
     try {
-      cart = await deleteProduct(cid, pid);
+      const { cid, pid } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(cid) || !mongoose.Types.ObjectId.isValid(pid) ) {
+        return CustomError.generateError(ErrorsMessages.OID_INVALID,404, ErrorsNames.OID_INVALID);
+      }
+      cart = await cartsService.deleteProduct(cid, pid);
+      if (!cart) {
+        return CustomError.generateError(ErrorsMessages.CART_OR_PRODUCT_NOT_FOUND,404,ErrorsNames.CART_OR_PRODUCT_NOT_FOUND);
+      }
       res.status(200).json({message:'Product deleted', cart});
     } catch (error) {
-      res.status(500).json({message: error.message});
+      next(error);
     }
 }
 
-export const updateProductsArray = async (req,res) => {
-    const {cid} = req.params;
-    const {products} = req.body;
+export const updateProductsArray = async (req, res, next) => {
     try {
-      const cart = await updateArray(cid,products)
+      const {cid} = req.params;
+      const {products} = req.body;
+      if (!mongoose.Types.ObjectId.isValid(cid)) {
+        return CustomError.generateError(ErrorsMessages.OID_INVALID,404,ErrorsNames.OID_INVALID);
+      }
+      const cart = await cartsService.updateArray(cid,products)
+      if (!cart) {
+        return CustomError.generateError(ErrorsMessages.CART_NOT_FOUND,404,ErrorsNames.CART_NOT_FOUND);
+      }
       res.status(200).json({message:'Products updated', cart});
     } catch (error) {
-      res.status(500).json({message: error.message});
+      next(error);
     }
 }
 
-export const updateProductQuantity =  async (req,res) => {
-    const {quantity} = req.body;
-    const { cid, pid } = req.params;
+export const updateProductQuantity =  async (req, res, next) => {
     try {
-      const cart = await updateQuantity(cid,pid,+quantity);
+      const {quantity} = req.body;
+      const { cid, pid } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(cid) || !mongoose.Types.ObjectId.isValid(pid) ) {
+        return CustomError.generateError(ErrorsMessages.OID_INVALID,404, ErrorsNames.OID_INVALID);
+      }
+      const cart = await cartsService.updateQuantity(cid,pid,+quantity);
+      if (!cart) {
+        return CustomError.generateError(ErrorsMessages.CART_OR_PRODUCT_NOT_FOUND,404,ErrorsNames.CART_OR_PRODUCT_NOT_FOUND);
+      }
       res.status(200).json({message:'Product quantity updated', cart});
     } catch (error) {
-      res.status(500).json({message: error.message});
+      next(error)
     } 
 }
 
-export const deleteAllProducts = async (req,res) => {
-    const {cid} = req.params;
+export const deleteAllProducts = async (req, res, next) => {
     try {
-      const cart = await deleteAll(cid)
+      const {cid} = req.params;
+      if (!mongoose.Types.ObjectId.isValid(cid)) {
+        return CustomError.generateError(ErrorsMessages.OID_INVALID,404,ErrorsNames.OID_INVALID);
+      }
+      const cart = await cartsService.deleteAll(cid)
+      if (!cart) {
+        return CustomError.generateError(ErrorsMessages.CART_NOT_FOUND,404,ErrorsNames.CART_NOT_FOUND);
+      }
       res.status(200).json({message:'Products deleted'});
     } catch (error) {
-      res.status(500).json({message: error.message});
+      next(error);
+      //res.status(500).json({message: error.message});
     }
+}
+
+export const ticketPurchase = async (req, res, next) => {
+  
+  try {
+    const {cid} = req.params;
+    if (!mongoose.Types.ObjectId.isValid(cid)) {
+      return CustomError.generateError(ErrorsMessages.OID_INVALID,404,ErrorsNames.OID_INVALID);
+    }
+    const response = await cartsService.purchase(cid);
+    if (!response) {
+      return CustomError.generateError(ErrorsMessages.CART_NOT_FOUND,404,ErrorsNames.CART_NOT_FOUND);
+    }
+    res.status(200).json({ response });
+  } catch (error) {
+    next(error);
+  }
 }

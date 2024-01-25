@@ -1,11 +1,12 @@
 import passport from "passport";
-import { UserManager } from "./daos/users.dao.js";
+import { UserManager } from "./DAL/daos/mongo/users.mongo.js";
+import { CartManager } from "./DAL/daos/mongo/carts.mongo.js";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GithubStrategy } from "passport-github2";
 import { Strategy as GoogleStrategy} from "passport-google-oauth20";
 import { ExtractJwt, Strategy as JWTStrategy } from "passport-jwt";
-import { hashData, compareData } from "./utils.js";
-import config from './config.js'
+import { hashData, compareData } from "./utils/utils.js";
+import config from './config/config.js'
 
 //local
 passport.use('signup', new LocalStrategy({ passReqToCallback: true, usernameField: 'email'},
@@ -16,7 +17,9 @@ passport.use('signup', new LocalStrategy({ passReqToCallback: true, usernameFiel
     }
     try {
         const hashedPassword = await hashData(password);
-        const createdUser = await UserManager.createOne({...req.body, password: hashedPassword});
+        const newCart = await CartManager.createCart();
+        const newObj = {...req.body, password: hashedPassword, cart: newCart._id}
+        const createdUser = await UserManager.createOne(newObj);
         done(null, createdUser)
     } catch (error) {
         done(error)
@@ -69,7 +72,9 @@ passport.use('github', new GithubStrategy(
                 password: ' ',
                 isGithub: true
             };
-            const createdUser = await UserManager.createOne(infoUser);
+            const newCart = await CartManager.createCart();
+            const newObj = {...infoUser, cart: newCart._id}
+            const createdUser = await UserManager.createOne(newObj);
             done(null, createdUser);
         } catch (error) {
             done(error)
@@ -103,7 +108,9 @@ passport.use('google', new GoogleStrategy(
                 password: ' ',
                 isGoogle: true
             };
-            const createdUser = await UserManager.createOne(infoUser);
+            const newCart = await CartManager.createCart();
+            const newObj = {...infoUser, cart: newCart._id}
+            const createdUser = await UserManager.createOne(newObj);
             done(null, createdUser);
         } catch (error) {
             done(error)

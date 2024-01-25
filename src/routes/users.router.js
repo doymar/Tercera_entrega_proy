@@ -14,7 +14,7 @@ router.get("/:idUser",
     findUserById
 );
 
-//router.get("/:email", findUserByEmail)
+// router.get("/:email", findUserByEmail)
 
 router.delete("/:idUser", deleteUser)
 

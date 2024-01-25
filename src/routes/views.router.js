@@ -1,10 +1,12 @@
 import { Router } from "express";
-import { ProductManager } from "../daos/products.dao.js";
-import { CartManager } from "../daos/carts.dao.js";
+import { authMiddleware2 } from "../middlewares/auth.middleware.js";
+import { ProductManager } from "../DAL/daos/mongo/products.mongo.js";
+import { CartManager } from "../DAL/daos/mongo/carts.mongo.js";
+import { randomProducts } from '../utils/faker.js';
 
 const router = Router();
 
-router.get("/",(req,res)=>{
+router.get("/", authMiddleware2('user'), (req,res)=>{
     res.render("chat");
 });
 
@@ -70,6 +72,15 @@ router.get('/carts/:cid', async (req,res) => {
         const cart = await CartManager.findCartById(cid);
         const cartProducts = cart.products.map(doc => doc.toObject());
         res.render('carts', {products: cartProducts})
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+})
+
+router.get('/mockingproducts', async (req,res) => {
+    try {
+        const products = randomProducts();
+        res.status(200).json({ products });
     } catch (error) {
         res.status(500).json({message: error.message});
     }

@@ -1,32 +1,41 @@
-import { UserManager } from "../daos/users.dao.js";
-import { CartManager } from "../daos/carts.dao.js";
-import { hashData } from "../utils.js";
+import { UserManager } from "../DAL/daos/mongo/users.mongo.js";
+import { CartManager } from "../DAL/daos/mongo/carts.mongo.js";
+import UsersRequestDto from "../DAL/dtos/user-request.dto.js";
+import UsersResponseDto from "../DAL/dtos/user-response.dto.js";
+import { hashData } from "../utils/utils.js";
 
-export const findAll = async ()=>{
-    const users = await UserManager.findAll();
-    return users;
+class UsersService {
+    async findAll() {
+        const users = await UserManager.findAll();
+        return users;
+    }
+
+    async findById(id) {
+        const user = await UserManager.findById(id);
+        const userDTO = new UsersResponseDto(user);
+        return userDTO;
+    }
+
+    async createOne(obj) {
+        const hashedPassword = await hashData(obj.password);
+        const newCart = await CartManager.createCart();
+        //const cart = newCart._id
+        const newObj = {...obj, password: hashedPassword, cart: newCart._id}
+        const userDTO = new UsersRequestDto(newObj)
+        const createdUser = await UserManager.createOne(userDTO);
+        return createdUser;
+    }
+
+    async findByEmail(email) {
+        const user = await UserManager.findByEmail(email);
+        const userDTO = new UsersResponseDto(user);
+        return userDTO;
+    }
+
+    async deleteOne(id) {
+        const user = await UserManager.deleteOne(id);
+        return user;
+    }
 }
 
-export const findById = async (id)=>{
-    const user = await UserManager.findById(id);
-    return user;
-}
-
-export const createOne = async (obj)=>{
-    const hashedPassword = await hashData(obj.password);
-    const newCart = await CartManager.createCart();
-    const cart = newCart._id
-    const newObj = {...obj, password: hashedPassword, cart}
-    const createdUser = await UserManager.createOne(newObj);
-    return createdUser;
-}
-
-export const findByEmail = async (email)=>{
-    const user = await UserManager.findByEmail(email);
-    return user;
-}
-
-export const deleteOne = async (id)=>{
-    const user = await UserManager.deleteOne(id);
-    return user;
-}
+export const usersService = new UsersService();

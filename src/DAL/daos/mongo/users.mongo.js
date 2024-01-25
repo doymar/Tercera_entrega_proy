@@ -1,4 +1,4 @@
-import { usersModel } from "../db/models/users.model.js";
+import { usersModel } from "../../models/users.model.js";
 
 class UsersManager {
     async findAll() {
@@ -28,6 +28,11 @@ class UsersManager {
 
     async deleteOne(id) {
         const response = await usersModel.deleteOne({_id: id});
+        return response;
+    }
+
+    async findByCart(cart) {
+        const response = await usersModel.findOne({cart});
         return response;
     }
 }

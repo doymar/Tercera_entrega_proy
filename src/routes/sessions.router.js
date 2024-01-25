@@ -1,7 +1,7 @@
 import { Router } from "express";
 import passport from "passport";
-import { UserManager } from '../daos/users.dao.js'
-import { hashData, compareData, generateToken } from "../utils.js";
+import { UserManager } from '../DAL/daos/mongo/users.mongo.js'
+import { hashData, compareData, generateToken } from "../utils/utils.js";
 const router = Router();
 
 router.get('/current', passport.authenticate('jwt',{session: false}), async (req,res) =>{
