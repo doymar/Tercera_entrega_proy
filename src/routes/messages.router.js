@@ -9,7 +9,7 @@ const router = Router();
 router.get('/', async (req,res) => {
     const mailOptions = {
         from: 'DoymarEcommers',
-        to: 'doymar.urbina@telefonica.com',
+        to: 'doymarurbina@gmail.com',
         subject: 'Prueba Ecommers',
         //text: 'Primera prueba mail',
         html: "<h1>Primer h1 de prueba nodemailer</h1>",
